@@ -284,8 +284,8 @@ function renderLeaderboard(data) {
                     <span class="player-name">${player.name}</span>
                 </div>
             </td>
-            <td class="col-wins">${player.wonPredictions} / ${player.totalPredictions}</td>
             <td class="col-points ${pointsClass}">${pointsSign}${pointsVal}</td>
+            <td class="col-wins">${player.wonPredictions} / ${player.totalPredictions}</td>
         `;
         tbody.appendChild(tr);
     });
