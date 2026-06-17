@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKVC World Cup 2026 Prediction Contest</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <!-- Navbar -->
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-accent">SKVC</span> Cup '26
+            </a>
+            <nav class="nav-links">
+                <a href="#hero">Home</a>
+                <a href="#leaderboard">Leaderboard</a>
+                <a href="#rules">Rules</a>
+                <a href="#contact">Contact</a>
+            </nav>
+            <button class="mobile-nav-toggle" aria-label="Toggle Navigation">
+                <i data-lucide="menu"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- Mobile Drawer -->
+    <div class="mobile-drawer">
+        <button class="mobile-drawer-close" aria-label="Close Navigation">
+            <i data-lucide="x"></i>
+        </button>
+        <div class="mobile-nav-links">
+            <a href="#hero" class="mobile-link">Home</a>
+            <a href="#leaderboard" class="mobile-link">Leaderboard</a>
+            <a href="#rules" class="mobile-link">Rules</a>
+            <a href="#contact" class="mobile-link">Contact</a>
+        </div>
+    </div>
+
+    <main>
+        <!-- Hero Section -->
+        <section id="hero" class="hero-section">
+            <div class="hero-bg-overlay"></div>
+            <div class="hero-content container">
+                <div class="badge animate-fade-in">
+                    <span class="badge-dot"></span> SKVC Prediction Arena
+                </div>
+                <h1 class="hero-title animate-slide-up">
+                    World Cup 2026<br>
+                    <span class="gradient-text">Prediction Contest</span>
+                </h1>
+                <p class="hero-subtitle animate-slide-up">
+                    Predict outcomes, score points, and dominate the leaderboard. Brought to you by B&B.
+                </p>
+
+                <div class="hero-cta animate-slide-up">
+                    <a href="#leaderboard" class="btn btn-primary">
+                        <i data-lucide="trophy"></i> View Leaderboard
+                    </a>
+                    <a href="#rules" class="btn btn-secondary">
+                        Rules & Points
+                    </a>
+                </div>
+
+                <!-- Next 3 Matches -->
+                <div class="upcoming-matches-grid animate-slide-up">
+                    <!-- Match 20 -->
+                    <div class="upcoming-match-card glass-panel">
+                        <div class="card-header">
+                            <span class="match-badge">Match #20</span>
+                            <span class="match-time">June 20, 20:00</span>
+                        </div>
+                        <div class="teams-container">
+                            <div class="team">
+                                <span class="flag">🇦🇹</span>
+                                <span class="team-name">Austria</span>
+                            </div>
+                            <div class="vs">VS</div>
+                            <div class="team">
+                                <span class="flag">🇯🇴</span>
+                                <span class="team-name">Jordan</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Match 21 -->
+                    <div class="upcoming-match-card glass-panel">
+                        <div class="card-header">
+                            <span class="match-badge">Match #21</span>
+                            <span class="match-time">June 21, 20:00</span>
+                        </div>
+                        <div class="teams-container">
+                            <div class="team">
+                                <span class="flag">🇬🇭</span>
+                                <span class="team-name">Ghana</span>
+                            </div>
+                            <div class="vs">VS</div>
+                            <div class="team">
+                                <span class="flag">🇵🇦</span>
+                                <span class="team-name">Panama</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Match 22 -->
+                    <div class="upcoming-match-card glass-panel">
+                        <div class="card-header">
+                            <span class="match-badge">Match #22</span>
+                            <span class="match-time">June 22, 20:00</span>
+                        </div>
+                        <div class="teams-container">
+                            <div class="team">
+                                <span class="flag">🏴󠁧󠁢󠁥󠁮󠁧󠁿</span>
+                                <span class="team-name">England</span>
+                            </div>
+                            <div class="vs">VS</div>
+                            <div class="team">
+                                <span class="flag">🇭🇷</span>
+                                <span class="team-name">Croatia</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Leaderboard Section -->
+        <section id="leaderboard" class="leaderboard-section container">
+            <div class="section-header">
+                <h2 class="section-title">The Leaderboard</h2>
+                <p class="section-desc">Real-time standings synced directly from our official score sheet.</p>
+            </div>
+
+            <!-- Search & Info Bar -->
+            <div class="leaderboard-controls glass-panel">
+                <div class="search-box">
+                    <i data-lucide="search" class="search-icon"></i>
+                    <input type="text" id="player-search" placeholder="Search predictor by name...">
+                </div>
+                <div class="source-link-container">
+                    <a href="#" id="sheet-link" target="_blank" class="sheet-btn">
+                        <i data-lucide="file-spreadsheet"></i> Open Google Sheet
+                    </a>
+                </div>
+            </div>
+
+            <!-- Leaderboard Table Container -->
+            <div class="leaderboard-wrapper glass-panel">
+                <div id="loading-state" class="loading-state">
+                    <div class="spinner"></div>
+                    <p>Fetching prediction standings from Google Sheets...</p>
+                </div>
+
+                <div id="error-state" class="error-state hidden">
+                    <i data-lucide="alert-circle" class="error-icon"></i>
+                    <p id="error-message">Failed to load leaderboard data. Please try again later.</p>
+                    <button id="retry-btn" class="btn btn-secondary btn-sm">Retry Connection</button>
+                </div>
+
+                <div class="table-scroll-container">
+                    <table id="leaderboard-table" class="leaderboard-table hidden">
+                        <thead>
+                            <tr>
+                                <th class="col-rank">Rank</th>
+                                <th class="col-name">Predictor Name</th>
+                                <th class="col-wins">Won / Predictions</th>
+                                <th class="col-points">Profit / Loss</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body">
+                            <!-- Populated via JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rules Section -->
+        <section id="rules" class="rules-section container">
+            <div class="section-header">
+                <h2 class="section-title">Point Calculation Rules</h2>
+                <p class="section-desc">Understand how points are distributed for each match prediction.</p>
+            </div>
+
+            <div class="rules-grid">
+                <div class="rule-card glass-panel">
+                    <div class="rule-icon-box gold">
+                        <i data-lucide="award"></i>
+                    </div>
+                    <h3>Exact Score</h3>
+                    <div class="points-badge">Group Stage Matches</div>
+                    <p>Each prediction costs ₹20. The total amount collected for that match will form the prize pool and
+                        will be equally shared among all participants who correctly predict the outcome.</p>
+                </div>
+
+                <div class="rule-card glass-panel">
+                    <div class="rule-icon-box silver">
+                        <i data-lucide="check-circle-2"></i>
+                    </div>
+                    <h3>No one Preicted correct</h3>
+                    <div class="points-badge">+1 Point</div>
+                    <p>If no participant predicts the outcome correctly, the prize fund will be carried forward or
+                        handled as per the competition organizer's discretion.</p>
+                </div>
+
+                <div class="rule-card glass-panel">
+                    <div class="rule-icon-box bronze">
+                        <i data-lucide="x-circle"></i>
+                    </div>
+                    <h3>Rule #1</h3>
+                    <div class="points-badge">0 Points</div>
+                    <p>Prediction should be done prior to the match begins.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section container">
+            <div class="contact-grid glass-panel">
+                <div class="contact-info">
+                    <div class="sponsor-tag">SPONSOR & ORGANIZER</div>
+                    <h2 class="sponsor-title">B&B Associates</h2>
+                    <p class="sponsor-desc">
+                        Empowering sportsmanship and community interaction through the love of football. Contact us for
+                        contest queries, complaints, or feedback.
+                    </p>
+                    <div class="contact-methods">
+                        <div class="contact-item">
+                            <i data-lucide="mail"></i>
+                            <div>
+                                <span class="label">Email Us</span>
+                                <a href="mailto:contact@bbassociates.com" class="value">contact@bbassociates.com</a>
+                            </div>
+                        </div>
+                        <div class="contact-item">
+                            <i data-lucide="phone"></i>
+                            <div>
+                                <span class="label">Call Support</span>
+                                <a href="tel:+9198722320101" class="value">+91 872232 0101</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="contact-form-container">
+                    <h3>Send a Query</h3>
+                    <form id="query-form" class="contact-form">
+                        <div class="form-group">
+                            <label for="form-name">Name</label>
+                            <input type="text" id="form-name" required placeholder="Enter your name">
+                        </div>
+                        <div class="form-group">
+                            <label for="form-email">Email</label>
+                            <input type="email" id="form-email" required placeholder="Enter your email">
+                        </div>
+                        <div class="form-group">
+                            <label for="form-message">Message / Objection</label>
+                            <textarea id="form-message" rows="4" required
+                                placeholder="What is on your mind?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">
+                            <i data-lucide="send"></i> Send Message
+                        </button>
+                    </form>
+                    <div id="form-success" class="form-success-msg hidden">
+                        <i data-lucide="check-circle"></i> Message sent successfully! B&B Associates will contact you
+                        soon.
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-container container">
+            <p>&copy; 2026 SKVC Prediction Arena. Sponsored by B&B Associates.</p>
+            <p>All Match Data and Schedules are subject to official FIFA World Cup regulations.</p>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
