@@ -113,11 +113,14 @@ async function initLeaderboard() {
                 leaderboardData = [...MOCK_LEADERBOARD];
                 // Simulate network latency for natural experience
                 await new Promise(resolve => setTimeout(resolve, 800));
+                renderUpcomingMatches(MOCK_UPCOMING);
             } else {
                 const response = await fetch(CSV_URL);
                 if (!response.ok) throw new Error("Sheet fetching failed");
                 const csvText = await response.text();
                 leaderboardData = parseCSV(csvText);
+                const upcomingMatches = extractUpcomingMatches(csvText);
+                renderUpcomingMatches(upcomingMatches);
             }
 
             renderLeaderboard(leaderboardData);
@@ -128,6 +131,7 @@ async function initLeaderboard() {
             // Graceful fallback to mock data so the app always looks polished
             leaderboardData = [...MOCK_LEADERBOARD];
             renderLeaderboard(leaderboardData);
+            renderUpcomingMatches(MOCK_UPCOMING);
             loading.classList.add('hidden');
             table.classList.remove('hidden');
             
@@ -155,48 +159,75 @@ async function initLeaderboard() {
     await loadData();
 }
 
-// Simple CSV Parser for Columns CX (101) and CY (102)
+// Simple CSV Parser with Dynamic Column Resolution
 function parseCSV(text) {
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
     if (lines.length <= 5) return [];
+
+    const headers = splitCSVLine(lines[4]).map(h => h.trim().toLowerCase());
+    
+    let nameIdx = headers.indexOf('name');
+    if (nameIdx === -1) {
+        nameIdx = headers.findIndex(h => h.includes('name'));
+    }
+    if (nameIdx === -1) nameIdx = 1; // Default to Column B
+
+    let profitLossIdx = headers.indexOf('profit/loss');
+    if (profitLossIdx === -1) {
+        profitLossIdx = headers.findIndex(h => h.includes('profit') || h.includes('loss'));
+    }
+    if (profitLossIdx === -1) profitLossIdx = 101; // Old fallback
+
+    let totalBetsIdx = headers.indexOf('# of bets');
+    if (totalBetsIdx === -1) {
+        totalBetsIdx = headers.indexOf('total bets');
+    }
+    if (totalBetsIdx === -1) {
+        totalBetsIdx = headers.findIndex(h => h.includes('bet') && h.includes('count') || h.includes('# of bets'));
+    }
+    if (totalBetsIdx === -1) totalBetsIdx = 99; // Old fallback
+
+    // Find where the prediction/payout columns end
+    // They end before the first summary column, which is usually 'total amount won' or '# of bets'
+    let firstSummaryIdx = headers.findIndex(h => 
+        h.includes('total amout') || 
+        h.includes('total amount') || 
+        h.includes('# of bets') || 
+        h.includes('profit/loss')
+    );
+    if (firstSummaryIdx === -1) firstSummaryIdx = 98; // Old fallback
 
     const items = [];
     // Data rows start from line index 5
     for (let i = 5; i < lines.length; i++) {
         const cols = splitCSVLine(lines[i]);
-        if (cols.length < 103) continue;
+        if (cols.length <= Math.max(nameIdx, profitLossIdx, totalBetsIdx)) continue;
 
-        const name = cols[102] || cols[1] || '';
+        const name = cols[nameIdx] || cols[1] || '';
         const trimmedName = name.trim();
         
         // Remove empty or summary rows
         if (!trimmedName || 
-            trimmedName === 'Total Bets' || 
-            trimmedName === 'Total Amount' || 
-            trimmedName === 'Bet Won Count' || 
-            trimmedName === 'Bet Won Amount' || 
-            trimmedName === 'Name') {
+            trimmedName.toLowerCase() === 'total bets' || 
+            trimmedName.toLowerCase() === 'total amount' || 
+            trimmedName.toLowerCase() === 'bet won count' || 
+            trimmedName.toLowerCase() === 'bet won amount' || 
+            trimmedName.toLowerCase() === 'name' ||
+            trimmedName.toLowerCase() === 'name/result') {
             continue;
         }
 
-        const rawPoints = cols[101];
+        const rawPoints = cols[profitLossIdx];
         if (rawPoints === undefined || rawPoints === null || rawPoints.trim() === '') continue;
 
         const points = parseFloat(rawPoints) || 0;
 
         // Calculate won and total predictions
-        let totalPredictions = 0;
+        let totalPredictions = parseInt(cols[totalBetsIdx]) || 0;
         let wonPredictions = 0;
 
-        // Column C (2) to Column CS (96) are the prediction columns
-        for (let j = 2; j <= 96; j += 2) {
-            if (cols[j] && cols[j].trim() !== '') {
-                totalPredictions++;
-            }
-        }
-
-        // Payout columns are at index j + 1 (3, 5, 7 ... 97)
-        for (let j = 3; j <= 97; j += 2) {
+        // Calculate won predictions by checking payout columns (odd indices starting at 3 up to firstSummaryIdx - 1)
+        for (let j = 3; j < firstSummaryIdx; j += 2) {
             if (cols[j] && cols[j].trim() !== '') {
                 const payout = parseFloat(cols[j]);
                 if (payout > 0) {
@@ -205,7 +236,16 @@ function parseCSV(text) {
             }
         }
 
-        if (totalPredictions > 0) {
+        // If totalPredictions is not present or 0, fallback to counting prediction columns
+        if (totalPredictions === 0) {
+            for (let j = 2; j < firstSummaryIdx; j += 2) {
+                if (cols[j] && cols[j].trim() !== '') {
+                    totalPredictions++;
+                }
+            }
+        }
+
+        if (totalPredictions > 0 || points !== 0) {
             items.push({ 
                 name: trimmedName, 
                 points, 
@@ -311,3 +351,116 @@ function initContactForm() {
         });
     });
 }
+
+// --- Upcoming Matches Logic ---
+
+const MOCK_UPCOMING = [
+    { badge: "Match #20", team1: "Austria", team2: "Jordan" },
+    { badge: "Match #21", team1: "Ghana", team2: "Panama" },
+    { badge: "Match #22", team1: "England", team2: "Croatia" }
+];
+
+const FLAG_MAP = {
+    'austria': '🇦🇹', 'jordan': '🇯🇴', 'ghana': '🇬🇭', 'panama': '🇵🇦', 'england': '🏴󠁧󠁢󠁥󠁮󠁧󠁿', 'croatia': '🇭🇷',
+    'portugal': '🇵🇹', 'dr congo': '🇨🇩', 'uzbekistan': '🇺🇿', 'colombia': '🇨🇴', 'czechia': '🇨🇿', 
+    'south africa': '🇿🇦', 'switzerland': '🇨🇭', 'bosnia': '🇧🇦', 'canada': '🇨🇦', 'qatar': '🇶🇦',
+    'mexico': '🇲🇽', 'south korea': '🇰🇷', 'brazil': '🇧🇷', 'haiti': '🇭🇹', 'scotland': '🏴󠁧󠁢󠁳󠁣󠁴󠁿',
+    'morocco': '🇲🇦', 'turkey': '🇹🇷', 'paraguay': '🇵🇾', 'usa': '🇺🇸', 'australia': '🇦🇺',
+    'germany': '🇩🇪', 'ivory coast': '🇨🇮', 'ecuador': '🇪🇨', 'curacao': '🇨🇼', 'netherlands': '🇳🇱',
+    'sweden': '🇸🇪', 'tunisia': '🇹🇳', 'japan': '🇯🇵', 'uruguay': '🇺🇾', 'cape verde': '🇨🇻',
+    'spain': '🇪🇸', 'saudi arabia': '🇸🇦', 'belgium': '🇧🇪', 'iran': '🇮🇷', 'new zealand': '🇳🇿',
+    'egypt': '🇪🇬', 'france': '🇫🇷', 'senegal': '🇸🇳', 'iraq': '🇮🇶', 'norway': '🇳🇴',
+    'argentina': '🇦🇷', 'algeria': '🇩🇿'
+};
+
+function getFlag(countryName) {
+    const cleaned = countryName.trim().toLowerCase();
+    return FLAG_MAP[cleaned] || '⚽';
+}
+
+function extractUpcomingMatches(csvText) {
+    const lines = csvText.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+    if (lines.length <= 5) return [];
+
+    const matchesLine = lines[3]; // Row 4 (0-indexed 3)
+    const resultsLine = lines[4]; // Row 5 (0-indexed 4)
+    
+    if (!matchesLine || !resultsLine) return [];
+    
+    const matchCols = splitCSVLine(matchesLine);
+    const resultCols = splitCSVLine(resultsLine);
+    
+    const headers = splitCSVLine(lines[4]).map(h => h.trim().toLowerCase());
+    let firstSummaryIdx = headers.findIndex(h => 
+        h.includes('total amout') || 
+        h.includes('total amount') || 
+        h.includes('# of bets') || 
+        h.includes('profit/loss')
+    );
+    if (firstSummaryIdx === -1) firstSummaryIdx = 98; // Fallback
+
+    const upcoming = [];
+    for (let j = 2; j < firstSummaryIdx; j += 2) {
+        const resultVal = resultCols[j];
+        if (!resultVal || resultVal.trim() === '') {
+            const matchStr = matchCols[j];
+            if (matchStr && matchStr.trim() !== '') {
+                const matchParts = matchStr.split(':');
+                const badge = matchParts[0] ? matchParts[0].trim() : 'Match';
+                const teamsStr = matchParts[1] ? matchParts[1].trim() : '';
+                const teams = teamsStr.split('/');
+                const team1 = teams[0] ? teams[0].trim() : '';
+                const team2 = teams[1] ? teams[1].trim() : '';
+                
+                if (team1 && team2) {
+                    upcoming.push({
+                        badge,
+                        team1,
+                        team2
+                    });
+                }
+            }
+        }
+        if (upcoming.length >= 4) break; // Maximum 3 to 4 matches
+    }
+    return upcoming;
+}
+
+function renderUpcomingMatches(matches) {
+    const container = document.getElementById('upcoming-matches-grid');
+    if (!container) return;
+    
+    if (matches.length === 0) {
+        container.innerHTML = `
+            <div style="grid-column: span 3; text-align: center; color: var(--text-muted); padding: 2rem;">
+                No upcoming matches scheduled.
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = matches.map(match => {
+        const flag1 = getFlag(match.team1);
+        const flag2 = getFlag(match.team2);
+        return `
+            <div class="upcoming-match-card glass-panel">
+                <div class="card-header">
+                    <span class="match-badge">${match.badge}</span>
+                    <span class="match-time">TBD</span>
+                </div>
+                <div class="teams-container">
+                    <div class="team">
+                        <span class="flag">${flag1}</span>
+                        <span class="team-name">${match.team1}</span>
+                    </div>
+                    <div class="vs">VS</div>
+                    <div class="team">
+                        <span class="flag">${flag2}</span>
+                        <span class="team-name">${match.team2}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
